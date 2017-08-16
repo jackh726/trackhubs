@@ -1,17 +1,17 @@
 # trackhubs
 
-1. Project Name:
+**1. Project Name:**
 TrackHubs v1.0.0
 
-2. Project repository: 
+**2. Project repository:** 
 https://github.com/umms-hackathon/trackhubs.git
 
-3. Team members: 
+**3. Team members:**
 
-4. Aim: 
+**4. Aim:**
 Creating ucsc genome browser hubs using an intuitive UI.
 
-5. Project description: 
+**5. Project description:** 
 Creating an hub usually time consuming and error prune due to the text parsers in track hubs section in ucsc genome browser. 
 Here we are going to create a system to allow users to add their own tracks to the genome browser and publish them in a web accessible area.
 
@@ -77,7 +77,9 @@ visibility dense
 
 
 
-6. Supporting material and links: Supporting material. Sample files, external links.
+**6. Supporting material and links:**
+
+Supporting material. Sample files, external links.
 
 https://genome.ucsc.edu/goldenpath/help/hgTrackHubHelp.html
 
