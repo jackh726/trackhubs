@@ -15,7 +15,7 @@ Creating ucsc genome browser hubs using an intuitive UI.
 Creating an hub usually time consuming and error prune due to the text parsers in track hubs section in ucsc genome browser. 
 Here we are going to create a system to allow users to add their own tracks to the genome browser and publish them in a web accessible area.
 
-Basically, we are going to create a three files in a directory structure below.
+Basically, we are going to create three files in a directory structure below.
 
 ![Alt text](https://genome.ucsc.edu/images/hubDirectoryImage.jpg?raw=true "Directory Structure")
 
