@@ -43,6 +43,7 @@ The trackDb.txt file uses stanzas for each track to inform the Browser of the na
 
 And user should add all selected files and choose color to the track. Please check the example trackDb.txt file below;
 
+```
 track  bigWig1
 bigDataUrl http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeCshlLongRnaSeq/wgEncodeCshlLongRnaSeqA549CellLongnonpolyaMinusRawSigRep1.bigWig
 shortLabel bigWig example
@@ -72,7 +73,7 @@ shortLabel chr21 VCF example
 longLabel This chr21 VCF file is an example from the 1000 Genomes Phase 1 Integrated Variant Calls Track
 type vcfTabix
 visibility dense
-
+```
 
 
 
