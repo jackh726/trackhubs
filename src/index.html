@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="panel" id="panel-basic-info">
+        <h1>Please enter some basic info:</h1>
+        <form action="">
+          <div class="form-group">
+            <label for="input_hub">Hub Name</label>
+            <input class="form-control" type="text" name="hub" id="input_hub" placeholder="Hub Name">
+          </div>
+          <div class="form-group">
+            <label for="input_shortLabel">Short Label</label>
+            <input class="form-control" type="text" name="shortLabel" id="input_shortLabel" placeholder="Short Label">
+            <small id="shortLabelHelp" class="form-text text-muted">Can be up to 17 characters in length.</small>          
+          </div>
+          <div class="form-group">
+            <label for="input_longLabel">Long Label</label>
+            <input class="form-control" type="text" name="longLabel" id="input_longLabel" placeholder="Long Label">
+            <small id="shortLabelHelp" class="form-text text-muted">Can be up to 80 characters in length.</small>          
+          </div>
+          <div class="form-group">
+            <label for="input_email">Email</label>            
+            <input class="form-control" type="email" name="email" id="input_email" placeholder="Email">
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-basic-done">Done</button>
+        </form>        
+      </div>
+      <div class="panel" id="panel-genomes">
+        <h1>Genomes</h1>
+        <table class="table" id="genome-table">
+          <thead>
+            <tr>
+              <th>Genomes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+        <button type="button" class="btn btn-primary" id="btn-create-track">Create Genome</button>
+      </div>
+      <div class="panel" id="panel-tracks">
+        <h1>Tracks</h1>
+        <input type="text"id="active-track-name" placeholder="New Track">
+
+        <table class="table" id="track-table">
+          <thead>
+            <tr>
+              <th>Tracks</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+        <button type="button" class="btn btn-primary" id="btn-track-done">Done</button>
+      </div>
+    </div>
+
+    <!-- jQuery first, then Tether, then Bootstrap JS. -->
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/data.js"></script>
+    <script>
+      let testTrack = new Track();
+      testTrack.trackName = "TestTrack";
+      let testGenome = new Genome("mm10");
+      testGenome.tracks = [testTrack];
+
+      genomes = new Map();
+      genomes.set(testGenome.name, testGenome);
+
+      $(document).ready(function () {
+        $("#panel-genomes").hide();
+        $("#panel-tracks").hide();
+
+        $("#btn-basic-done").click(function () {
+          $("#panel-basic-info").hide();
+          $("#panel-genomes").show();
+        });
+
+        $("#btn-create-track").click(function() {
+          $("#panel-genomes").hide();
+          $("#panel-tracks").show();
+        });
+
+        $("#btn-track-done").click(function() {
+          $("#panel-tracks").hide();
+          $("#panel-genomes").show();
+
+          // TODO: clear tracks for next time
+        });
+  
+        $("#genome-table").on("click", ".edit-genome", function() {
+          console.log("Edit clicked");
+          console.log(event.target.parentNode.parentNode);
+
+          // TODO: show track panel and populate
+        });
+  
+        $("#genome-table").on("click", ".delete-genome", function() {
+          let name = event.target.parentNode.parentNode.dataset.name;
+          console.log(name);
+          removeGenomeFromTable(name);
+          genomes.delete(name);
+        });
+
+        addGenomeToTable(testGenome);
+      });
+
+      function addGenomeToTable(genome) {
+        var markup = `
+          <tr data-name="${genome.name}">
+          <td>${genome.name}</td>
+          <td>
+            <button type="button" class="btn btn-primary edit-genome">Edit</button> 
+            |
+            <button type="button" class="btn btn-danger delete-genome">Delete</button>
+          </td>
+          </tr>
+          `;
+        $("#genome-table tbody").append(markup);
+      }
+
+      function removeGenomeFromTable(name) {
+        $("#genome-table tr[data-name='" + name + "']").remove();
+      }
+    </script>
+  </body>
+</html>
