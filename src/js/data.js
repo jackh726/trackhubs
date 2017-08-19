@@ -5,7 +5,13 @@ class Track {
     //shortLabel label 17 chars
     //longLabel long label up to 80 chars
 
-    constructor() {}
+    constructor() {
+        this.track = "UNDEFINED"
+        this.type = "UNDEFINED";
+        this.bigDataUrl = "UNDEFINED";
+        this.shortLabel = "UNDEFINED";
+        this.longLabel = "UNDEFINED";
+    }
 }
 
 class Genome {
@@ -13,6 +19,7 @@ class Genome {
     //tracks
 
     constructor() {
-        this.tracks = [];
+        this.name = undefined;
+        this.tracks = {};
     }
 }

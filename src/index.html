@@ -42,6 +42,7 @@
           <thead>
             <tr>
               <th>Genome name</th>
+              <th>Tracks</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -53,7 +54,7 @@
 
       <div class="panel" id="panel-tracks">
         <h1>Tracks</h1>
-        <input type="text"id="active-track-name" placeholder="New Track">
+        <input type="text" id="active-genome-name" placeholder="Genome">
         <table class="table" id="track-table">
           <thead>
             <tr>
@@ -66,7 +67,7 @@
           </tbody>
         </table>
         <button type="button" class="btn btn-primary" id="btn-create-track">Create Track</button>  
-        <button type="button" class="btn btn-secondary" id="btn-genome-done">Done</button>
+        <button type="button" class="btn btn-success" id="btn-tracks-done">Done</button>
       </div>
 
       <div class="panel" id="panel-create-track">
@@ -118,19 +119,19 @@
 
     <script src="js/data.js"></script>
     <script>
-      let testTrack = new Track();
-      testTrack.trackName = "TestTrack";
-      let testGenome = new Genome();
-      testGenome.name = "mm10";
-      testGenome.tracks = [testTrack];
-
-      genomes = new Map();
-      genomes.set(testGenome.name, testGenome);
-
-      activeGenome = {};
+      hubinfo = {};
+      genomes = {};
+      activeGenome = undefined;
+      oldTrackName = undefined;
 
       $(document).ready(function () {
-        $("#panel-genomes").hide();
+        load();
+
+        if (Object.keys(hubinfo).length == 0) {
+          $("#panel-genomes").hide();
+        } else {
+          $("#panel-basic-info").hide();
+        }
         $("#panel-tracks").hide();
         $("#panel-create-track").hide();
 
@@ -138,6 +139,16 @@
         $("#btn-basic-done").click(function () {
           $("#panel-basic-info").hide();
           $("#panel-genomes").show();
+
+          let formData = $("#basic-info-form").serializeArray();
+          console.log(formData);
+          for (var pair in formData) {
+            let obj = formData[pair];
+            hubinfo[obj.name] = obj.value;
+          }
+          console.log("Info added:");
+          console.log(hubinfo);
+          save();
         });
 
         // Genomes panel
@@ -152,15 +163,22 @@
           $("#panel-genomes").hide();
           $("#panel-tracks").show();
 
-          // TODO: populate
-          // activeGenome =
+          let name = event.target.parentNode.parentNode.dataset.name;
+          oldGenomeName = name;
+          activeGenome = genomes[name];
+          for (index in activeGenome.tracks) {
+            let track = activeGenome.tracks[index];
+            addTrackToTable(track);
+          }
+          $("#active-genome-name").val(activeGenome.name);
         });
 
         $("#genome-table").on("click", ".delete-genome", function() {
           let name = event.target.parentNode.parentNode.dataset.name;
           console.log(name);
           removeGenomeFromTable(name);
-          genomes.delete(name);
+          delete genomes[name];
+          save();
         });
 
         // Tracks panel
@@ -169,19 +187,36 @@
           $("#panel-create-track").show();
         });
 
-        $("#btn-genome-done").click(function() {
+        $("#btn-tracks-done").click(function() {
           $("#panel-tracks").hide();
           $("#panel-genomes").show();
 
-          // TODO: clear tracks for next time
+          let name = $("#active-genome-name").val();
+          let oldname = activeGenome.name;
+          activeGenome.name = name;
+          addGenomeToTable(oldname, activeGenome);
+          delete genomes[oldname];
+          genomes[activeGenome.name] = activeGenome;
+          activeGenome = undefined;
+          $("#panel-tracks tbody").html("");
+          $("#active-genome-name").val("");
+          save();
         });
 
         $("#track-table").on("click", ".edit-track", function() {
           $("#panel-tracks").hide();
           $("#panel-create-track").show();
 
-          // TODO: populate
-          // activeGenome =
+          let name = event.target.parentNode.parentNode.dataset.name;
+          let track = activeGenome.tracks[name];
+
+          $("#input_track_name").val(track.track);
+          $("#input_track_shortLabel").val(track.shortLabel);
+          $("#input_track_longLabel").val(track.longLabel);
+          $("#input_track_type").val(track.type);
+          $("#input_track_URL").val(track.bigDataUrl);
+
+          oldTrackName = name;
         });
 
         $("#track-table").on("click", ".delete-track", function() {
@@ -201,7 +236,8 @@
             let obj = formData[pair];
             track[obj.name] = obj.value;
           }
-          console.log("Track created: " + track);
+          console.log("Track created:");
+          console.log(track);
           activeGenome.tracks[track.track] = track;
           addTrackToTable(track);
         });
@@ -211,14 +247,26 @@
           $("#panel-tracks").show();
         });
   
+        // TODO: temp
+        if (Object.keys(genomes).length == 0) {
+          console.log("Adding temp");
+          let testTrack = new Track();
+          testTrack.track = "TestTrack";
+          let testGenome = new Genome();
+          testGenome.name = "mm10";
+          testGenome.tracks[testTrack.track] = testTrack;
+          genomes[testGenome.name] = testGenome;
+          addGenomeToTable(undefined, testGenome);
+        }
 
-        addGenomeToTable(testGenome);
+        save();
       });
 
-      function addGenomeToTable(genome) {
+      function addGenomeToTable(oldname, genome) {
         var markup = `
           <tr data-name="${genome.name}">
           <td>${genome.name}</td>
+          <td>${Object.keys(genome.tracks).length}</td>
           <td>
             <button type="button" class="btn btn-primary edit-genome">Edit</button> 
             |
@@ -226,13 +274,17 @@
           </td>
           </tr>
           `;
-        $("#genome-table tbody").append(markup);
+        if (oldname) {
+          let oldelement = $("#genome-table tbody tr[data-name='" + oldname + "']");
+          oldelement.replaceWith(markup);
+        } else {
+          $("#genome-table tbody").append(markup);
+        }
       }
 
       function removeGenomeFromTable(name) {
         $("#genome-table tr[data-name='" + name + "']").remove();
       }
-
 
       function addTrackToTable(track) {
         var markup = `
@@ -246,11 +298,41 @@
           </td>
           </tr>
           `;
-        $("#track-table tbody").append(markup);
+        if (oldTrackName) {
+          $("#track-table tbody tr[data-name='" + oldTrackName + "']").replaceWith(markup);
+          oldTrackName = undefined;
+        } else {
+          $("#track-table tbody").append(markup);
+        }
       }
 
       function removeTrackFromTable(name) {
         $("#track-table tr[data-name='" + name + "']").remove();
+      }
+
+      function load() {
+        raw = localStorage["genomes"];
+        console.log(raw);
+        if (raw) {
+          genomes = JSON.parse(raw);
+        }
+
+        raw = localStorage["hubinfo"];
+        console.log(raw);
+        if (raw) {
+          hubinfo = JSON.parse(raw);
+        }
+
+        for (key in genomes) {
+          genome = genomes[key];
+          console.log(genome);
+          addGenomeToTable(undefined, genome);
+        }
+      }
+
+      function save() {
+        localStorage["genomes"] = JSON.stringify(genomes);
+        localStorage["hubinfo"] = JSON.stringify(hubinfo);
       }
     </script>
   </body>
