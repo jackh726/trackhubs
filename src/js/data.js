@@ -1,9 +1,9 @@
 class Track {
-    //track_name;
-    //track_data_URL;
-    //short_label;
-    //long_label;
-    //track_type;
+    //track uniqueNameNoSpacesOrDots
+    //type track_type
+    //bigDataUrl track_data_url
+    //shortLabel label 17 chars
+    //longLabel long label up to 80 chars
 
     constructor() {}
 }
@@ -12,7 +12,7 @@ class Genome {
     //name
     //tracks
 
-    constructor(name) {
-        this.name = name;
-    }    
+    constructor() {
+        this.tracks = [];
+    }
 }

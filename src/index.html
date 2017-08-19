@@ -13,7 +13,7 @@
     <div class="container">
       <div class="panel" id="panel-basic-info">
         <h1>Please enter some basic info:</h1>
-        <form action="">
+        <form action="" id="basic-info-form">
           <div class="form-group">
             <label for="input_hub">Hub Name</label>
             <input class="form-control" type="text" name="hub" id="input_hub" placeholder="Hub Name">
@@ -26,44 +26,88 @@
           <div class="form-group">
             <label for="input_longLabel">Long Label</label>
             <input class="form-control" type="text" name="longLabel" id="input_longLabel" placeholder="Long Label">
-            <small id="shortLabelHelp" class="form-text text-muted">Can be up to 80 characters in length.</small>          
+            <small id="longLabelHelp" class="form-text text-muted">Can be up to 80 characters in length.</small>          
           </div>
           <div class="form-group">
             <label for="input_email">Email</label>            
             <input class="form-control" type="email" name="email" id="input_email" placeholder="Email">
           </div>
           <button type="button" class="btn btn-primary" id="btn-basic-done">Done</button>
-        </form>        
+        </form>
       </div>
+
       <div class="panel" id="panel-genomes">
         <h1>Genomes</h1>
         <table class="table" id="genome-table">
           <thead>
             <tr>
-              <th>Genomes</th>
-              <th></th>
+              <th>Genome name</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
           </tbody>
         </table>
-        <button type="button" class="btn btn-primary" id="btn-create-track">Create Genome</button>
+        <button type="button" class="btn btn-primary" id="btn-create-genome">Create Genome</button>
       </div>
+
       <div class="panel" id="panel-tracks">
         <h1>Tracks</h1>
         <input type="text"id="active-track-name" placeholder="New Track">
-
         <table class="table" id="track-table">
           <thead>
             <tr>
-              <th>Tracks</th>
-              <th></th>
+              <th>Track Name</th>
+              <th>Description</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
           </tbody>
         </table>
-        <button type="button" class="btn btn-primary" id="btn-track-done">Done</button>
+        <button type="button" class="btn btn-primary" id="btn-create-track">Create Track</button>  
+        <button type="button" class="btn btn-secondary" id="btn-genome-done">Done</button>
+      </div>
+
+      <div class="panel" id="panel-create-track">
+        <h1>Track info:</h1>
+        <form action="" id="create-track-form">
+          <div class="form-group">
+            <label for="input_track_name">Track Name</label>
+            <input class="form-control" type="text" name="track" id="input_track_name" placeholder="Track Name">
+          </div>
+          <div class="form-group">
+            <label for="input_track_shortLabel">Short Label</label>
+            <input class="form-control" type="text" name="shortLabel" id="input_track_shortLabel" placeholder="Short Label">
+            <small id="track_shortLabelHelp" class="form-text text-muted">Can be up to 17 characters in length.</small>          
+          </div>
+          <div class="form-group">
+            <label for="input_track_longLabel">Long Label</label>
+            <input class="form-control" type="text" name="longLabel" id="input_track_longLabel" placeholder="Long Label">
+            <small id="track_longLabelHelp" class="form-text text-muted">Can be up to 80 characters in length.</small>
+          </div>
+          <div class="form-group">
+            <select name="type" id="input_track_type">
+              <option value="bam">bam</option>              
+              <option value="bigWig">bigWig</option>
+              <!-- TODO: Allow optional number after this -->
+              <option value="bigBed">bigBed</option>
+              <option value="bigBarChart">bigBarChart</option>
+              <option value="bigGenePred">bigGenPred</option>
+              <option value="bigChain">bigChain</option>
+              <option value="bigPsl">bigPsl</option>
+              <option value="bigMaf">bigMaf</option>
+              <option value="halSnake">halSnake</option>
+              <option value="vcfTabix">vcfTabix</option>              
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="input_track_url">URL</label>
+            <input class="form-control" type="url" name="bigDataUrl" id="input_track_URL" placeholder="http://example.com/example.bam">
+          </div>
+          <button type="reset" class="btn btn-primary" id="btn-track-done">Done</button>
+          <button type="reset" class="btn btn-danger" id="btn-track-cancel">Cancel</button>          
+        </form>
       </div>
     </div>
 
@@ -76,46 +120,97 @@
     <script>
       let testTrack = new Track();
       testTrack.trackName = "TestTrack";
-      let testGenome = new Genome("mm10");
+      let testGenome = new Genome();
+      testGenome.name = "mm10";
       testGenome.tracks = [testTrack];
 
       genomes = new Map();
       genomes.set(testGenome.name, testGenome);
 
+      activeGenome = {};
+
       $(document).ready(function () {
         $("#panel-genomes").hide();
         $("#panel-tracks").hide();
+        $("#panel-create-track").hide();
 
+        // Basic info panel
         $("#btn-basic-done").click(function () {
           $("#panel-basic-info").hide();
           $("#panel-genomes").show();
         });
 
-        $("#btn-create-track").click(function() {
+        // Genomes panel
+        $("#btn-create-genome").click(function() {
           $("#panel-genomes").hide();
           $("#panel-tracks").show();
+
+          activeGenome = new Genome();
         });
 
-        $("#btn-track-done").click(function() {
-          $("#panel-tracks").hide();
-          $("#panel-genomes").show();
-
-          // TODO: clear tracks for next time
-        });
-  
         $("#genome-table").on("click", ".edit-genome", function() {
-          console.log("Edit clicked");
-          console.log(event.target.parentNode.parentNode);
+          $("#panel-genomes").hide();
+          $("#panel-tracks").show();
 
-          // TODO: show track panel and populate
+          // TODO: populate
+          // activeGenome =
         });
-  
+
         $("#genome-table").on("click", ".delete-genome", function() {
           let name = event.target.parentNode.parentNode.dataset.name;
           console.log(name);
           removeGenomeFromTable(name);
           genomes.delete(name);
         });
+
+        // Tracks panel
+        $("#btn-create-track").click(function() {
+          $("#panel-tracks").hide();
+          $("#panel-create-track").show();
+        });
+
+        $("#btn-genome-done").click(function() {
+          $("#panel-tracks").hide();
+          $("#panel-genomes").show();
+
+          // TODO: clear tracks for next time
+        });
+
+        $("#track-table").on("click", ".edit-track", function() {
+          $("#panel-tracks").hide();
+          $("#panel-create-track").show();
+
+          // TODO: populate
+          // activeGenome =
+        });
+
+        $("#track-table").on("click", ".delete-track", function() {
+          let name = event.target.parentNode.parentNode.dataset.name;
+          removeTrackFromTable(name);
+          delete activeGenome.tracks[name];
+        });
+
+        // Create track panel
+        $("#btn-track-done").click(function() {
+          $("#panel-create-track").hide();
+          $("#panel-tracks").show();
+
+          let formData = $("#create-track-form").serializeArray();
+          let track = new Track(); 
+          for (var pair in formData) {
+            let obj = formData[pair];
+            track[obj.name] = obj.value;
+          }
+          console.log("Track created: " + track);
+          activeGenome.tracks[track.track] = track;
+          addTrackToTable(track);
+        });
+
+        $("#btn-track-cancel").click(function() {
+          $("#panel-create-track").hide();
+          $("#panel-tracks").show();
+        });
+  
 
         addGenomeToTable(testGenome);
       });
@@ -136,6 +231,26 @@
 
       function removeGenomeFromTable(name) {
         $("#genome-table tr[data-name='" + name + "']").remove();
+      }
+
+
+      function addTrackToTable(track) {
+        var markup = `
+          <tr data-name="${track.track}">
+          <td>${track.track}</td>
+          <td>${track.longLabel}</td>
+          <td>
+            <button type="button" class="btn btn-primary edit-track">Edit</button> 
+            |
+            <button type="button" class="btn btn-danger delete-track">Delete</button>
+          </td>
+          </tr>
+          `;
+        $("#track-table tbody").append(markup);
+      }
+
+      function removeTrackFromTable(name) {
+        $("#track-table tr[data-name='" + name + "']").remove();
       }
     </script>
   </body>
