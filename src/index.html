@@ -70,6 +70,7 @@
         </table>
         <button type="button" class="btn btn-primary" id="btn-create-track">Create Track</button>  
         <button type="button" class="btn btn-success" id="btn-tracks-done">Done</button>
+        <button type="button" class="btn btn-danger" id="btn-tracks-cancel">Cancel</button>        
       </div>
 
       <div class="panel" id="panel-create-track">
@@ -136,10 +137,9 @@
     <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="js/bootstrap.min.js"></script>
-    <script src="js/FileSaver.min.js"></script>
 
     <script src="js/data.js"></script>
-    <script>
+      <script>
       hubinfo = {};
       genomes = {};
       activeGenome = undefined;
@@ -159,18 +159,42 @@
 
         // Basic info panel
         $("#btn-basic-done").click(function () {
-          $("#panel-basic-info").hide();
-          $("#panel-genomes").show();
-
+          let hub = $("#input_hub").val();
+          let shortLabel = $("#input_shortLabel").val();
+          let longLabel = $("#input_longLabel").val();
+          let email = $("#input_email").val();
+          if (hub.length == 0 || shortLabel.length == 0 || longLabel == 0) {
+            alert("All fields are required!");
+            return;
+          }
+          if (hub.indexOf(' ') >= 0) {
+            alert("Hub name must be a single word.");
+            return;
+          }
+          if (shortLabel.length > 17) {
+            alert("Short label should be a maximum of 17 characters.");
+            return;
+          }
+          if (longLabel.length > 80) {
+            alert("Long label should be a maximum of 80 characters.");
+            return;
+          }
+          var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+          if (!re.test(email)) {
+            alert("Please enter a valid email.");
+            return;
+          }
           let formData = $("#basic-info-form").serializeArray();
           console.log(formData);
           for (var pair in formData) {
             let obj = formData[pair];
             hubinfo[obj.name] = obj.value;
           }
-          console.log("Info added:");
-          console.log(hubinfo);
+          hubinfo["genomesFile"] = "genomes.txt";
           save();
+
+          $("#panel-basic-info").hide();
+          $("#panel-genomes").show();
         });
 
         // Genomes panel
@@ -178,12 +202,10 @@
           $("#panel-genomes").hide();
           $("#panel-basic-info").show();
 
-          $("#input_hub").val("hub");
-          $("#input_shortLabel").val("shortLabel");
-          $("#input_longLabel").val("longLabel");
-          $("#input_email").val("email");
-
-
+          $("#input_hub").val(hubinfo["hub"]);
+          $("#input_shortLabel").val(hubinfo["shortLabel"]);
+          $("#input_longLabel").val(hubinfo["longLabel"]);
+          $("#input_email").val(hubinfo["email"]);
         });
 
         $("#btn-create-genome").click(function() {
@@ -199,7 +221,7 @@
 
           let name = event.target.parentNode.parentNode.dataset.name;
           oldGenomeName = name;
-          activeGenome = genomes[name];
+          activeGenome = jQuery.extend(true, {}, genomes[name]);
           for (index in activeGenome.tracks) {
             let track = activeGenome.tracks[index];
             addTrackToTable(track);
@@ -251,7 +273,9 @@
 
         $("#btn-export-hub").click(function() {
           let out = "";
+          out += "hub " + hubinfo["hub"] + "\n";
           for (key in hubinfo) {
+            if (key == "hub") continue;
             out += key + " " + hubinfo[key] + "\n";
           }
           download([out], "hub.txt");
@@ -299,10 +323,19 @@
         });
 
         $("#btn-tracks-done").click(function() {
+          let name = $("#active-genome-name").val();
+          if (name.length == 0) {
+            alert("Please enter a name for the genome.");
+            return;
+          }
+          if (activeGenome.name != name && genomes[name]) {
+            alert("Please enter a unique name for this genome.");
+            return;
+          }
+
           $("#panel-tracks").hide();
           $("#panel-genomes").show();
 
-          let name = $("#active-genome-name").val();
           let oldname = activeGenome.name;
           activeGenome.name = name;
           addGenomeToTable(oldname, activeGenome);
@@ -312,6 +345,15 @@
           $("#panel-tracks tbody").html("");
           $("#active-genome-name").val("");
           save();
+        });
+
+        $("#btn-tracks-cancel").click(function() {
+          $("#panel-tracks").hide();
+          $("#panel-genomes").show();
+          
+          $("#panel-tracks tbody").html("");
+          $("#active-genome-name").val("");
+          activeGenome = undefined;
         });
 
         $("#track-table").on("click", ".edit-track", function() {
@@ -337,7 +379,36 @@
         });
 
         // Create track panel
-        $("#btn-track-done").click(function() {
+        $("#btn-track-done").click(function(event) {
+          let name = $("#input_track_name").val();
+          let shortLabel = $("#input_track_shortLabel").val();
+          let longLabel = $("#input_track_longLabel").val();
+          if (name.length == 0 || shortLabel.length == 0 || longLabel == 0) {
+            alert("All fields are required!");
+            event.preventDefault();
+            return;
+          }
+          if (name.indexOf(' ') >= 0) {
+            alert("Track name must be a single word.");
+            event.preventDefault();
+            return;
+          }
+          if (oldTrackName != name && activeGenome.tracks[name]) {
+            alert("Please enter a unique name for this track.");
+            event.preventDefault();
+            return;
+          }
+          if (shortLabel.length > 17) {
+            alert("Short label should be a maximum of 17 characters.");
+            event.preventDefault();
+            return;
+          }
+          if (longLabel.length > 80) {
+            alert("Long label should be a maximum of 80 characters.");
+            event.preventDefault();
+            return;
+          }
+
           $("#panel-create-track").hide();
           $("#panel-tracks").show();
 
@@ -372,23 +443,6 @@
 
         save();
       });
-
-      function data2blob(data, isBase64) {
-        var chars = "";
-
-        if (isBase64)
-          chars = atob(data);
-        else
-          chars = data;
-
-        var bytes = new Array(chars.length);
-        for (var i = 0; i < chars.length; i++) {
-          bytes[i] = chars.charCodeAt(i);
-        }
-
-        var blob = new Blob([new Uint8Array(bytes)]);
-        return blob;
-      }
 
       function addGenomeToTable(oldname, genome) {
         var markup = `
