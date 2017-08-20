@@ -38,6 +38,8 @@
 
       <div class="panel" id="panel-genomes">
         <h1>Genomes</h1>
+        <button type="button" class="btn btn-info float-right" id="btn-export">Export</button>        
+        <button type="button" class="btn btn-info float-right" id="btn-go-info">Edit Info</button>
         <table class="table" id="genome-table">
           <thead>
             <tr>
@@ -152,6 +154,21 @@
         });
 
         // Genomes panel
+        $("#btn-go-info").click(function() {
+          $("#panel-genomes").hide();
+          $("#panel-basic-info").show();
+
+          $("#input_hub").val("hub");
+          $("#input_shortLabel").val("shortLabel");
+          $("#input_longLabel").val("longLabel");
+          $("#input_email").val("email");
+
+
+        });
+
+        $("#btn-export").click(function() {
+        });
+
         $("#btn-create-genome").click(function() {
           $("#panel-genomes").hide();
           $("#panel-tracks").show();
