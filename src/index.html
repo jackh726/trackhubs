@@ -56,7 +56,8 @@
 
       <div class="panel" id="panel-tracks">
         <h1>Tracks</h1>
-        <input type="text" id="active-genome-name" placeholder="Genome">
+        <label>Genome name:</label>
+        <input class="form-control col-sm-4" style="display:inline-block" type="text" id="active-genome-name" placeholder="Genome">
         <table class="table" id="track-table">
           <thead>
             <tr>
@@ -104,6 +105,7 @@
               <option value="halSnake">halSnake</option>
               <option value="vcfTabix">vcfTabix</option>              
             </select>
+            <input class="form-control" style="display:inline-block;width:200px" type="text" name="bigBedNum" id="input_track_bigBed" disabled>
           </div>
           <div class="form-group">
             <label for="input_track_url">URL</label>
@@ -366,10 +368,31 @@
           $("#input_track_name").val(track.track);
           $("#input_track_shortLabel").val(track.shortLabel);
           $("#input_track_longLabel").val(track.longLabel);
-          $("#input_track_type").val(track.type);
+          let index = track.type.indexOf(" ");
+          let type = track.type;
+          let typenum;
+          if (index > -1) {
+            strs = track.type.split(/(\s+)/);
+            type = strs[0];
+            $("#input_track_bigBed").prop("disabled", false);
+            $("#input_track_bigBed").val(strs[2]);
+            typenum = strs[2];
+          }
+          $("#input_track_type").val(type);
           $("#input_track_URL").val(track.bigDataUrl);
 
           oldTrackName = name;
+        });
+
+        $("#input_track_type").change(function() {
+          let val = $(this).val();
+          if (val == "bigBed") {
+            $("#input_track_bigBed").prop('disabled', false); 
+          } else {
+            let i = $("#input_track_bigBed")
+            i.prop('disabled', true);
+            i.val(""); 
+          }
         });
 
         $("#track-table").on("click", ".delete-track", function() {
@@ -383,6 +406,8 @@
           let name = $("#input_track_name").val();
           let shortLabel = $("#input_track_shortLabel").val();
           let longLabel = $("#input_track_longLabel").val();
+          let type = $("#input_track_type").val();
+          let typenum = $("#input_track_bigBed").val();
           if (name.length == 0 || shortLabel.length == 0 || longLabel == 0) {
             alert("All fields are required!");
             event.preventDefault();
@@ -408,15 +433,29 @@
             event.preventDefault();
             return;
           }
+          if (type == "bigBed" && typenum != 0) {
+            if (isNaN(parseFloat(typenum)) || !isFinite(typenum) || typenum < 3 || typenum > 20) {
+              alert("Please use a number between 3 and 20 for the bigBed input (or empty).");
+              event.preventDefault();
+              return;
+            }
+          }
 
           $("#panel-create-track").hide();
           $("#panel-tracks").show();
+
+          $("#input_track_bigBed").prop("disabled", true);
 
           let formData = $("#create-track-form").serializeArray();
           let track = new Track(); 
           for (var pair in formData) {
             let obj = formData[pair];
-            track[obj.name] = obj.value;
+            let val = obj.value;
+            if (val == "bigBed" && !isNaN(parseFloat(typenum)) && isFinite(typenum)) {
+              val = val + " " + typenum
+            }
+            if (obj.name == "bigBedNum") continue;
+            track[obj.name] = val;
           }
           console.log("Track created:");
           console.log(track);
@@ -427,6 +466,8 @@
         $("#btn-track-cancel").click(function() {
           $("#panel-create-track").hide();
           $("#panel-tracks").show();
+
+          $("#input_track_bigBed").prop("disabled", true);
         });
   
         // TODO: temp
