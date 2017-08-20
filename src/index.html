@@ -114,9 +114,12 @@
       </div>
 
       <div class="form-group" id="panel-export">
-        <button type="button" class="btn btn-info" id="btn-export-hub">Export hub.txt</button>  
+        <button type="button" class="btn btn-info" id="btn-export-hub">Export hub.txt</button>
+        <br>
+        <br>
         <button type="button" class="btn btn-info" id="btn-export-genomes">Export genomes.txt</button>
-        
+        <br>
+        <br>
         <div class="form-group">
             <label for="trackDb-select">Export trackDb.txt</label>
             <select class="form-control" id="trackDb-select">
@@ -125,6 +128,7 @@
         </div>
 
         <button type="button" class="btn btn-danger" id="btn-export-done">Done</button>
+        <a id="export-download">Download</a>
       </div>
     </div>
 
@@ -132,6 +136,7 @@
     <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/FileSaver.min.js"></script>
 
     <script src="js/data.js"></script>
     <script>
@@ -230,6 +235,63 @@
           $("#trackDb-select").html("");
         });
 
+        url = null;
+        function download(data, name) {
+          if (url) {
+              window.URL.revokeObjectURL(url);
+          }
+          file = new Blob(data, {type: "text/plain"});
+          url = URL.createObjectURL(file);
+          a = $("#export-download");
+          a.attr('href', url);
+          a.attr('download', name);
+          a.trigger("click");
+
+        }
+
+        $("#btn-export-hub").click(function() {
+          let out = "";
+          for (key in hubinfo) {
+            out += key + " " + hubinfo[key] + "\n";
+          }
+          download([out], "hub.txt");
+        });
+
+        $("#btn-export-genomes").click(function() {
+          let out = "";
+          let first = true;
+          for (key in genomes) {
+            if (first) {
+              first = false;
+            } else {
+              out += "\n";
+            }
+            out += "genome " + key + "\n";
+            out += "trackDb " + key + "\\trackDb.txt\n";
+          }
+          download([out], "genomes.txt");
+        });
+
+        $("#btn-export-tracks").click(function() {
+          let val = $("#trackDb-select").val();
+          let genome = genomes[val];
+          let tracks = genome["tracks"];
+          let out = "";
+          let first = true;
+          for (t in tracks) {
+            let track = tracks[t];
+            if (first) {
+              first = false;
+            } else {
+              out += "\n";
+            }
+            for (key in track) {
+              out += key + " " + track[key] + "\n";
+            }
+          }
+          download([out], "trackDb.txt");
+        });
+
         // Tracks panel
         $("#btn-create-track").click(function() {
           $("#panel-tracks").hide();
@@ -311,6 +373,23 @@
         save();
       });
 
+      function data2blob(data, isBase64) {
+        var chars = "";
+
+        if (isBase64)
+          chars = atob(data);
+        else
+          chars = data;
+
+        var bytes = new Array(chars.length);
+        for (var i = 0; i < chars.length; i++) {
+          bytes[i] = chars.charCodeAt(i);
+        }
+
+        var blob = new Blob([new Uint8Array(bytes)]);
+        return blob;
+      }
+
       function addGenomeToTable(oldname, genome) {
         var markup = `
           <tr data-name="${genome.name}">
@@ -318,7 +397,6 @@
           <td>${Object.keys(genome.tracks).length}</td>
           <td>
             <button type="button" class="btn btn-primary edit-genome">Edit</button> 
-            |
             <button type="button" class="btn btn-danger delete-genome">Delete</button>
           </td>
           </tr>
@@ -342,7 +420,6 @@
           <td>${track.longLabel}</td>
           <td>
             <button type="button" class="btn btn-primary edit-track">Edit</button> 
-            |
             <button type="button" class="btn btn-danger delete-track">Delete</button>
           </td>
           </tr>
@@ -361,20 +438,19 @@
 
       function load() {
         raw = localStorage["genomes"];
-        console.log(raw);
+        //console.log(raw);
         if (raw) {
           genomes = JSON.parse(raw);
         }
 
         raw = localStorage["hubinfo"];
-        console.log(raw);
+        //console.log(raw);
         if (raw) {
           hubinfo = JSON.parse(raw);
         }
 
         for (key in genomes) {
           genome = genomes[key];
-          console.log(genome);
           addGenomeToTable(undefined, genome);
         }
       }
