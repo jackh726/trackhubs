@@ -2,8 +2,9 @@
     margin-top: 50px;
 }
 
-#btn-go-info {
-    margin-right: 20px;
+.btn-nav {
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 #trackDb-select {

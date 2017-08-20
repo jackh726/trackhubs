@@ -33,13 +33,15 @@
             <input class="form-control" type="email" name="email" id="input_email" placeholder="Email">
           </div>
           <button type="button" class="btn btn-primary" id="btn-basic-done">Done</button>
+          <button type="button" class="btn btn-success" id="btn-import-main">Import Instead</button>                          
         </form>
       </div>
 
       <div class="panel" id="panel-genomes">
         <h1>Genomes</h1>
-        <button type="button" class="btn btn-info float-right" id="btn-export">Export</button>        
-        <button type="button" class="btn btn-info float-right" id="btn-go-info">Edit Info</button>
+        <button type="button" class="btn btn-info float-right btn-nav" id="btn-import">Import</button>                
+        <button type="button" class="btn btn-info float-right btn-nav" id="btn-export">Export</button>        
+        <button type="button" class="btn btn-info float-right btn-nav" id="btn-go-info">Edit Info</button>
         <table class="table" id="genome-table">
           <thead>
             <tr>
@@ -131,9 +133,30 @@
               <button type="button" class="btn btn-info" id="btn-export-tracks">Export trackDb.txt</button>              
           </div>
 
-          <button type="button" class="btn btn-danger" id="btn-export-done">Done</button>
+          <button type="button" class="btn btn-success" id="btn-export-done">Done</button>
           <a id="export-download">Download</a>
         </div>
+      </div>
+
+      <div class="panel" id="panel-import">
+        <form id="form-import1">
+          <div class="form-group">
+            <h2>Please upload your hub.txt and genome.txt:</h2>
+            <div class="form-group">
+              <label for="input_import_hub">hubs.txt</label>
+              <input class="form-control-file" type="file" name="hub" id="input_import_hub">
+            </div>
+            <div class="form-group">
+              <label for="input_import_genomes">genomes.txt</label>
+              <input class="form-control-file" type="file" name="genomes" id="input_import_genomes">
+            </div>
+            <div class="form-group" id="input-import-genomeslist" style="display:none">
+              <h3>Genome files:</h3>
+            </div>
+            <button type="reset" class="btn btn-primary" id="btn-import-done">Import</button>            
+            <button type="reset" class="btn btn-danger" id="btn-import-cancel">Cancel</button>            
+          </div>
+        </form>
       </div>
 
       <div class="modal fade" id="confirm-delete-modal">
@@ -180,6 +203,7 @@
           $("#panel-basic-info").hide();
         }
         $("#panel-export").hide();
+        $("#panel-import").hide();
         $("#panel-tracks").hide();
         $("#panel-create-track").hide();
 
@@ -223,6 +247,11 @@
           $("#panel-genomes").show();
         });
 
+        $("#btn-import-main").click(function() {
+          $("#panel-basic-info").hide();
+          $("#panel-import").show();
+        });
+
         // Genomes panel
         $("#btn-go-info").click(function() {
           $("#panel-genomes").hide();
@@ -232,6 +261,23 @@
           $("#input_shortLabel").val(hubinfo["shortLabel"]);
           $("#input_longLabel").val(hubinfo["longLabel"]);
           $("#input_email").val(hubinfo["email"]);
+        });
+
+        $("#btn-export").click(function() {
+          $("#panel-genomes").hide();
+          $("#panel-export").show();
+
+          for (key in genomes) {
+            let markup = `
+            <option>${key}</option>
+            `;
+            $("#trackDb-select").append(markup);
+          }
+        });
+
+        $("#btn-import").click(function() {
+          $("#panel-genomes").hide();
+          $("#panel-import").show();
         });
 
         $("#btn-create-genome").click(function() {
@@ -286,18 +332,6 @@
         })
 
         // Export panel
-        $("#btn-export").click(function() {
-          $("#panel-genomes").hide();
-          $("#panel-export").show();
-
-          for (key in genomes) {
-            let markup = `
-            <option>${key}</option>
-            `;
-            $("#trackDb-select").append(markup);
-          }
-        });
-
         $("#btn-export-done").click(function() {
           $("#panel-export").hide();
           $("#panel-genomes").show();
@@ -364,6 +398,141 @@
           download([out], "trackDb.txt");
         });
 
+        // Import panel
+        importhubinfo = {};
+        importgenomes = {};
+
+        function clean(str) {
+          str = str.replace(/(\r\n|\n|\r)/gm,"");
+          return str;
+        }
+
+        $("#input_import_hub").change(function() {
+          let file = $("#input_import_hub")[0].files[0];
+          let fr = new FileReader();
+          fr.onload = function(e) {
+            result = e.target.result;
+            console.log(result);
+            let lines = result.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+              let str = lines[i];
+              let key = clean(str.substr(0, str.indexOf(' ')));
+              let value = clean(str.substr(str.indexOf(' ') +1));
+              importhubinfo[key] = value;
+            }
+          }
+          fr.readAsText(file);
+        });
+
+        $("#input_import_genomes").change(function() {
+          let file = $("#input_import_genomes")[0].files[0];
+          let fr = new FileReader();
+          fr.onload = function(e) {
+            result = e.target.result;
+            console.log(result);
+            let lines = result.split('\n');
+            let current = {};
+            for (var i = 0; i < lines.length; i++) {
+              let str = lines[i];
+              let key = clean(str.substr(0, str.indexOf(' ')));
+              let value = clean(str.substr(str.indexOf(' ') +1));
+              if (key == "genome") {;
+                importgenomes[value] = {};
+              }
+            }
+
+            $("#input-import-genomeslist").show();
+            for (genome in importgenomes) {
+              let markup = `
+              <label for="input_import_genome-${genome}">${genome}</label>
+              <input class="form-control-file genome-upload" data-genome="${genome}" type="file" name="genome-${genome}" id="input_import_genome_${genome}">
+              <br>
+              `;
+              $("#input-import-genomeslist").append(markup);
+            }
+          }
+          fr.readAsText(file);
+        });
+
+        $("#input-import-genomeslist").on("change", ".genome-upload", function(event) {
+          let genome = event.target.dataset.genome;
+          genome = genome.replace(/^\s+|\s+$/g, '');
+          let genomeObj = new Genome();
+          genomeObj.name = genome;
+          let file = event.target.files[0];
+          let fr = new FileReader();
+          fr.onload = function(e) {
+            result = e.target.result;
+            console.log(result);
+            let lines = result.split('\n');
+            let current = new Track();
+            let currentTrack = "";
+            for (var i = 0; i < lines.length; i++) {
+              let str = lines[i];
+              let key = clean(str.substr(0, str.indexOf(' ')));
+              let value = clean(str.substr(str.indexOf(' ') +1));
+              if (key == "track") {
+                currentTrack = value;
+              }
+              current[key] = value;
+              if (i+1 == lines.length || !lines[i+1].trim()) {
+                i++;
+                genomeObj.tracks[currentTrack] = current;
+                current = new Track();
+                currentTrack = "";
+              }
+            }
+            importgenomes[genomeObj.name] = genomeObj;
+          }
+          fr.readAsText(file);
+        });
+
+        $("#btn-import-done").click(function(event) {
+          if (Object.keys(hubinfo).length == 0 && (Object.keys(importhubinfo).length == 0)) {
+            alert("hubs.txt is required.");
+            event.preventDefault();
+            return;
+          }
+          if (Object.keys(importgenomes).length == 0) {
+            alert("genomes.txt is required.");
+            event.preventDefault();
+            return;
+          }
+          for (key in importgenomes) {
+            if (Object.keys(importgenomes[key]).length == 0) {
+              alert("Missing trackDb.txt for '" + key + "'");
+              event.preventDefault();
+              return;
+            }
+          }
+          $("#panel-import").hide();
+          $("#panel-genomes").show();
+
+          $("#genome-table tbody").html("");
+          hubinfo = importhubinfo;
+          genomes = importgenomes;
+          for (genome in genomes) {
+            addGenomeToTable(undefined, genomes[genome]);
+          }
+
+          importhubinfo = {};
+          importgenomes = {};
+
+          save();
+        });
+
+        $("#btn-import-cancel").click(function() {
+          $("#panel-import").hide();
+          if (Object.keys(hubinfo).length == 0) {
+            $("#panel-basic-info").show();
+          } else {
+            $("#panel-genomes").show();
+          }
+
+          importhubinfo = {};
+          importgenomes = {};
+        });
+
         // Tracks panel
         $("#btn-create-track").click(function() {
           $("#panel-tracks").hide();
@@ -404,7 +573,7 @@
           activeGenome = undefined;
         });
 
-        $("#track-table").on("click", ".edit-track", function() {
+        $("#track-table").on("click", ".edit-track", function(event) {
           $("#panel-tracks").hide();
           $("#panel-create-track").show();
 
