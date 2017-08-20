@@ -97,7 +97,6 @@
             <select name="type" id="input_track_type">
               <option value="bam">bam</option>              
               <option value="bigWig">bigWig</option>
-              <!-- TODO: Allow optional number after this -->
               <option value="bigBed">bigBed</option>
               <option value="bigBarChart">bigBarChart</option>
               <option value="bigGenePred">bigGenPred</option>
@@ -110,7 +109,7 @@
             <input class="form-control" style="display:inline-block;width:200px" type="text" name="bigBedNum" id="input_track_bigBed" disabled>
           </div>
           <div class="form-group">
-            <label for="input_track_url">URL</label>
+            <label for="input_track_url">Data Location</label>
             <input class="form-control" type="url" name="bigDataUrl" id="input_track_URL" placeholder="http://example.com/example.bam">
           </div>
           <button type="reset" class="btn btn-primary" id="btn-track-done">Done</button>
