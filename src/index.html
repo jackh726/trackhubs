@@ -133,6 +133,26 @@
         <button type="button" class="btn btn-danger" id="btn-export-done">Done</button>
         <a id="export-download">Download</a>
       </div>
+
+      <div class="modal fade" id="confirm-delete-modal">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <p>Are you sure you want to delete <span id="delete-object"></span>?</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+                <button type="button" class="btn btn-success" id="cancel-delete" data-dismiss="modal">Keep</button>
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
 
     <!-- jQuery first, then Tether, then Bootstrap JS. -->
@@ -146,6 +166,8 @@
       genomes = {};
       activeGenome = undefined;
       oldTrackName = undefined;
+      objectfordeletion = undefined;
+      objectfordeletiontype = undefined;
 
       $(document).ready(function () {
         load();
@@ -234,10 +256,32 @@
         $("#genome-table").on("click", ".delete-genome", function() {
           let name = event.target.parentNode.parentNode.dataset.name;
           console.log(name);
+          objectfordeletiontype = "genome";
+          objectfordeletion = name;
+          $("#confirm-delete-modal").modal({});
+          $("#delete-object").text("genome '" + name + "'");
+        });
+
+        function deleteGenome(name) {
           removeGenomeFromTable(name);
           delete genomes[name];
           save();
+        }
+
+        $('#confirm-delete').click(function (event) {
+          if (objectfordeletiontype == "genome") {
+            deleteGenome(objectfordeletion);
+          } else {// "track"
+            deleteTrack(objectfordeletion);
+          }
+          $("#confirm-delete-modal").modal('hide');
         });
+
+        $('#confirm-delete-modal').on('hidden.bs.modal', function (event) {
+          objectfordeletion = undefined;
+          objectfordeletiontype = undefined;
+          $("#delete-object").text("");
+        })
 
         // Export panel
         $("#btn-export").click(function() {
@@ -397,9 +441,16 @@
 
         $("#track-table").on("click", ".delete-track", function() {
           let name = event.target.parentNode.parentNode.dataset.name;
+          objectfordeletiontype = "track";
+          objectfordeletion = name;
+          $("#confirm-delete-modal").modal({});
+          $("#delete-object").text("track '" + name + "'");
+        });
+
+        function deleteTrack(name) {
           removeTrackFromTable(name);
           delete activeGenome.tracks[name];
-        });
+        }
 
         // Create track panel
         $("#btn-track-done").click(function(event) {
