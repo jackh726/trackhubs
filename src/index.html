@@ -116,22 +116,24 @@
         </form>
       </div>
 
-      <div class="form-group" id="panel-export">
-        <button type="button" class="btn btn-info" id="btn-export-hub">Export hub.txt</button>
-        <br>
-        <br>
-        <button type="button" class="btn btn-info" id="btn-export-genomes">Export genomes.txt</button>
-        <br>
-        <br>
+      <div class="panel" id="panel-export">
         <div class="form-group">
-            <label for="trackDb-select">Export trackDb.txt</label>
-            <select class="form-control" id="trackDb-select">
-            </select>
-            <button type="button" class="btn btn-info" id="btn-export-tracks">Export trackDb.txt</button>              
-        </div>
+          <button type="button" class="btn btn-info" id="btn-export-hub">Export hub.txt</button>
+          <br>
+          <br>
+          <button type="button" class="btn btn-info" id="btn-export-genomes">Export genomes.txt</button>
+          <br>
+          <br>
+          <div class="form-group">
+              <label for="trackDb-select">Export trackDb.txt</label>
+              <select class="form-control" id="trackDb-select">
+              </select>
+              <button type="button" class="btn btn-info" id="btn-export-tracks">Export trackDb.txt</button>              
+          </div>
 
-        <button type="button" class="btn btn-danger" id="btn-export-done">Done</button>
-        <a id="export-download">Download</a>
+          <button type="button" class="btn btn-danger" id="btn-export-done">Done</button>
+          <a id="export-download">Download</a>
+        </div>
       </div>
 
       <div class="modal fade" id="confirm-delete-modal">
