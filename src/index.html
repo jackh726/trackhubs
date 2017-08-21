@@ -193,6 +193,11 @@
       objectfordeletion = undefined;
       objectfordeletiontype = undefined;
 
+      function switchPanel(toHide, toShow) {
+          $(toHide).hide();
+          $(toShow).show();
+      }
+
       $(document).ready(function () {
         load();
 
@@ -242,19 +247,16 @@
           hubinfo["genomesFile"] = "genomes.txt";
           save();
 
-          $("#panel-basic-info").hide();
-          $("#panel-genomes").show();
+          switchPanel("#panel-basic-info", "#panel-genomes");
         });
 
         $("#btn-import-main").click(function() {
-          $("#panel-basic-info").hide();
-          $("#panel-import").show();
+          switchPanel("#panel-basic-info", "#panel-import");
         });
 
         // Genomes panel
         $("#btn-go-info").click(function() {
-          $("#panel-genomes").hide();
-          $("#panel-basic-info").show();
+          switchPanel("#panel-genomes", "#panel-basic-info");
 
           $("#input_hub").val(hubinfo["hub"]);
           $("#input_shortLabel").val(hubinfo["shortLabel"]);
@@ -263,8 +265,7 @@
         });
 
         $("#btn-export").click(function() {
-          $("#panel-genomes").hide();
-          $("#panel-export").show();
+          switchPanel("#panel-genomes", "#panel-export");
 
           for (key in genomes) {
             let markup = `
@@ -275,20 +276,17 @@
         });
 
         $("#btn-import").click(function() {
-          $("#panel-genomes").hide();
-          $("#panel-import").show();
+          switchPanel("#panel-genomes", "#panel-import");
         });
 
         $("#btn-create-genome").click(function() {
-          $("#panel-genomes").hide();
-          $("#panel-tracks").show();
+          switchPanel("#panel-genomes", "#panel-tracks");
 
           activeGenome = new Genome();
         });
 
         $("#genome-table").on("click", ".edit-genome", function() {
-          $("#panel-genomes").hide();
-          $("#panel-tracks").show();
+          switchPanel("#panel-genomes", "#panel-tracks");
 
           let name = event.target.parentNode.parentNode.dataset.name;
           oldGenomeName = name;
@@ -332,8 +330,7 @@
 
         // Export panel
         $("#btn-export-done").click(function() {
-          $("#panel-export").hide();
-          $("#panel-genomes").show();
+          switchPanel("#panel-export", "#panel-genomes");
 
           $("#trackDb-select").html("");
         });
@@ -349,7 +346,6 @@
           a.attr('href', url);
           a.attr('download', name);
           a.trigger("click");
-
         }
 
         $("#btn-export-hub").click(function() {
@@ -504,8 +500,7 @@
               return;
             }
           }
-          $("#panel-import").hide();
-          $("#panel-genomes").show();
+          switchPanel("#panel-import", "#panel-genomes");
 
           $("#genome-table tbody").html("");
           hubinfo = importhubinfo;
@@ -521,11 +516,10 @@
         });
 
         $("#btn-import-cancel").click(function() {
-          $("#panel-import").hide();
           if (Object.keys(hubinfo).length == 0) {
-            $("#panel-basic-info").show();
+            switchPanel("#panel-import", "#panel-basic-info");
           } else {
-            $("#panel-genomes").show();
+            switchPanel("#panel-import", "#panel-basic-info");
           }
 
           importhubinfo = {};
@@ -534,8 +528,7 @@
 
         // Tracks panel
         $("#btn-create-track").click(function() {
-          $("#panel-tracks").hide();
-          $("#panel-create-track").show();
+          switchPanel("#panel-tracks", "#panel-create-track");
         });
 
         $("#btn-tracks-done").click(function() {
@@ -549,8 +542,7 @@
             return;
           }
 
-          $("#panel-tracks").hide();
-          $("#panel-genomes").show();
+          switchPanel("#panel-tracks", "#panel-genomes");
 
           let oldname = activeGenome.name;
           activeGenome.name = name;
@@ -564,17 +556,15 @@
         });
 
         $("#btn-tracks-cancel").click(function() {
-          $("#panel-tracks").hide();
-          $("#panel-genomes").show();
-          
+          switchPanel("#panel-tracks", "#panel-genomes");
+
           $("#panel-tracks tbody").html("");
           $("#active-genome-name").val("");
           activeGenome = undefined;
         });
 
         $("#track-table").on("click", ".edit-track", function(event) {
-          $("#panel-tracks").hide();
-          $("#panel-create-track").show();
+          switchPanel("#panel-tracks", "#panel-create-track");
 
           let name = event.target.parentNode.parentNode.dataset.name;
           let track = activeGenome.tracks[name];
@@ -662,8 +652,7 @@
             }
           }
 
-          $("#panel-create-track").hide();
-          $("#panel-tracks").show();
+          switchPanel("#panel-create-track", "#panel-tracks");
 
           $("#input_track_bigBed").prop("disabled", true);
 
@@ -685,8 +674,7 @@
         });
 
         $("#btn-track-cancel").click(function() {
-          $("#panel-create-track").hide();
-          $("#panel-tracks").show();
+          switchPanel("#panel-create-track", "#panel-tracks");
 
           $("#input_track_bigBed").prop("disabled", true);
         });
