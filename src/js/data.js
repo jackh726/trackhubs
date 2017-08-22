@@ -96,16 +96,6 @@ function getGenomesImportData(data) {
             importgenomes[value] = {};
         }
     }
-
-    $("#input-import-genomeslist").show();
-    for (genome in importgenomes) {
-        let markup = `
-        <label for="input_import_genome-${genome}">${genome}</label>
-        <input class="form-control-file genome-upload" data-genome="${genome}" type="file" name="genome-${genome}" id="input_import_genome_${genome}">
-        <br>
-        `;
-        $("#input-import-genomeslist").append(markup);
-    }
     return importgenomes;
 }
 

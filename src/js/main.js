@@ -120,29 +120,30 @@ $(document).ready(function () {
             let genomesSize = Object.keys(importgenomes).length;
             let genomesProcessed = 0;
             for (genome in importgenomes) {
-            trackFile = zip.folder(genome).file("trackDb.txt");
-            if (!trackFile) {
-                alert("Uploaded zip does not contain a trackDb.txt for '" + genome + "'. (Must be inside a folder named '" + genome + "'.");
-                resetImport();
-                return;
-            }
-            trackFile.async("string").then(function (data) {
-                console.log("trackDB.txt:");
-                console.log(data);
-                importgenomes = getTrackDBImportData(data, genome, importgenomes);
-                genomesProcessed += 1;
-                if (genomesProcessed == genomesSize) {
-                hubinfo = importhubinfo;
-                genomes = importgenomes;
-                $("#genome-table tbody").html("");
-                for (genome in genomes) {
-                    addGenomeToTable(undefined, genomes[genome]);
+                // TODO: respect trackDb paths in genomes.txt
+                trackFile = zip.folder(genome).file("trackDb.txt");
+                if (!trackFile) {
+                    alert("Uploaded zip does not contain a trackDb.txt for '" + genome + "'. (Must be inside a folder named '" + genome + "'.");
+                    resetImport();
+                    return;
                 }
-                resetImport();
-                save();
-                switchPanel("#panel-basic-info", "#panel-genomes");
-                }
-            });
+                trackFile.async("string").then(function (data) {
+                    console.log("trackDB.txt:");
+                    console.log(data);
+                    importgenomes = getTrackDBImportData(data, genome, importgenomes);
+                    genomesProcessed += 1;
+                    if (genomesProcessed == genomesSize) {
+                        hubinfo = importhubinfo;
+                        genomes = importgenomes;
+                        $("#genome-table tbody").html("");
+                        for (genome in genomes) {
+                            addGenomeToTable(undefined, genomes[genome]);
+                        }
+                        resetImport();
+                        save();
+                        switchPanel("#panel-basic-info", "#panel-genomes");
+                    }
+                });
             }
         });
         }, function (e) {
