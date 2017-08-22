@@ -117,26 +117,7 @@
         </form>
       </div>
 
-      <div class="panel" id="panel-import">
-        <form id="form-import1">
-          <div class="form-group">
-            <h2>Please upload your hub.txt and genome.txt:</h2>
-            <div class="form-group">
-              <label for="input_import_hub">hubs.txt</label>
-              <input class="form-control-file" type="file" name="hub" id="input_import_hub">
-            </div>
-            <div class="form-group">
-              <label for="input_import_genomes">genomes.txt</label>
-              <input class="form-control-file" type="file" name="genomes" id="input_import_genomes">
-            </div>
-            <div class="form-group" id="input-import-genomeslist" style="display:none">
-              <h3>Genome files:</h3>
-            </div>
-            <button type="reset" class="btn btn-primary" id="btn-import-done">Import</button>            
-            <button type="reset" class="btn btn-danger" id="btn-import-cancel">Cancel</button>            
-          </div>
-        </form>
-      </div>
+      <input id="input-import" type="file" name="import" style="display: none;">
 
       <div class="modal fade" id="confirm-delete-modal">
           <div class="modal-dialog" role="document">
@@ -187,7 +168,6 @@
         } else {
           $("#panel-basic-info").hide();
         }
-        $("#panel-import").hide();
         $("#panel-tracks").hide();
         $("#panel-create-track").hide();
 
@@ -231,7 +211,7 @@
         });
 
         $("#btn-import-main").click(function() {
-          switchPanel("#panel-basic-info", "#panel-import");
+          $('#input-import').trigger('click');
         });
 
         // Genomes panel
@@ -259,8 +239,73 @@
         });
 
         $("#btn-import").click(function() {
-          switchPanel("#panel-genomes", "#panel-import");
+          //switchPanel("#panel-genomes", "#panel-import");
+          $('#input-import').trigger('click');
         });
+
+        $("#input-import").change(function() {
+          let file = $("#input-import")[0].files[0];
+          console.log("Importing: " + file.name);
+          let importhubinfo = {};
+          let importgenomes = {};
+          JSZip.loadAsync(file)
+          .then(function(zip) {
+            let hubFile = zip.file("hub.txt");
+            if (!hubFile) {
+              if (Object.keys(hubinfo).length == 0) {
+                  alert("There must be a hub.txt.");
+                  resetImport();
+                  return;
+              }
+            } else {
+              hubFile.async("string").then(function (data) {
+                console.log("hubs.txt:");
+                console.log(data);
+                importhubinfo = getHubImportData(data);
+              });
+            }
+            zip.file("genomes.txt").async("string").then(function (data) {
+              console.log("genomes.txt:");
+              console.log(data);
+              importgenomes = getGenomesImportData(data);
+              let genomesSize = Object.keys(importgenomes).length;
+              let genomesProcessed = 0;
+              for (genome in importgenomes) {
+                trackFile = zip.folder(genome).file("trackDb.txt");
+                if (!trackFile) {
+                  alert("Uploaded zip does not contain a trackDb.txt for '" + genome + "'. (Must be inside a folder named '" + genome + "'.");
+                  resetImport();
+                  return;
+                }
+                trackFile.async("string").then(function (data) {
+                  console.log("trackDB.txt:");
+                  console.log(data);
+                  importgenomes = getTrackDBImportData(data, genome, importgenomes);
+                  genomesProcessed += 1;
+                  if (genomesProcessed == genomesSize) {
+                    hubinfo = importhubinfo;
+                    genomes = importgenomes;
+                    $("#genome-table tbody").html("");
+                    for (genome in genomes) {
+                      addGenomeToTable(undefined, genomes[genome]);
+                    }
+                    resetImport();
+                    save();
+                    switchPanel("#panel-basic-info", "#panel-genomes");
+                  }
+                });
+              }
+            });
+          }, function (e) {
+            console.log(e);
+          });
+        });
+
+        function resetImport() {
+          importhubinfo = {};
+          importgenomes = {};
+          $("#input-import").val("");
+        }
 
         $("#btn-create-genome").click(function() {
           switchPanel("#panel-genomes", "#panel-tracks");
@@ -310,139 +355,6 @@
           objectfordeletiontype = undefined;
           $("#delete-object").text("");
         })
-
-        // Import panel
-        importhubinfo = {};
-        importgenomes = {};
-
-        function clean(str) {
-          str = str.replace(/(\r\n|\n|\r)/gm,"");
-          return str;
-        }
-
-        $("#input_import_hub").change(function() {
-          let file = $("#input_import_hub")[0].files[0];
-          let fr = new FileReader();
-          fr.onload = function(e) {
-            result = e.target.result;
-            console.log(result);
-            let lines = result.split('\n');
-            for (var i = 0; i < lines.length; i++) {
-              let str = lines[i];
-              let key = clean(str.substr(0, str.indexOf(' ')));
-              let value = clean(str.substr(str.indexOf(' ') +1));
-              importhubinfo[key] = value;
-            }
-          }
-          fr.readAsText(file);
-        });
-
-        $("#input_import_genomes").change(function() {
-          let file = $("#input_import_genomes")[0].files[0];
-          let fr = new FileReader();
-          fr.onload = function(e) {
-            result = e.target.result;
-            console.log(result);
-            let lines = result.split('\n');
-            let current = {};
-            for (var i = 0; i < lines.length; i++) {
-              let str = lines[i];
-              let key = clean(str.substr(0, str.indexOf(' ')));
-              let value = clean(str.substr(str.indexOf(' ') +1));
-              if (key == "genome") {;
-                importgenomes[value] = {};
-              }
-            }
-
-            $("#input-import-genomeslist").show();
-            for (genome in importgenomes) {
-              let markup = `
-              <label for="input_import_genome-${genome}">${genome}</label>
-              <input class="form-control-file genome-upload" data-genome="${genome}" type="file" name="genome-${genome}" id="input_import_genome_${genome}">
-              <br>
-              `;
-              $("#input-import-genomeslist").append(markup);
-            }
-          }
-          fr.readAsText(file);
-        });
-
-        $("#input-import-genomeslist").on("change", ".genome-upload", function(event) {
-          let genome = event.target.dataset.genome;
-          genome = genome.replace(/^\s+|\s+$/g, '');
-          let genomeObj = new Genome();
-          genomeObj.name = genome;
-          let file = event.target.files[0];
-          let fr = new FileReader();
-          fr.onload = function(e) {
-            result = e.target.result;
-            console.log(result);
-            let lines = result.split('\n');
-            let current = new Track();
-            let currentTrack = "";
-            for (var i = 0; i < lines.length; i++) {
-              let str = lines[i];
-              let key = clean(str.substr(0, str.indexOf(' ')));
-              let value = clean(str.substr(str.indexOf(' ') +1));
-              if (key == "track") {
-                currentTrack = value;
-              }
-              current[key] = value;
-              if (i+1 == lines.length || !lines[i+1].trim()) {
-                i++;
-                genomeObj.tracks[currentTrack] = current;
-                current = new Track();
-                currentTrack = "";
-              }
-            }
-            importgenomes[genomeObj.name] = genomeObj;
-          }
-          fr.readAsText(file);
-        });
-
-        $("#btn-import-done").click(function(event) {
-          if (Object.keys(hubinfo).length == 0 && (Object.keys(importhubinfo).length == 0)) {
-            alert("hubs.txt is required.");
-            event.preventDefault();
-            return;
-          }
-          if (Object.keys(importgenomes).length == 0) {
-            alert("genomes.txt is required.");
-            event.preventDefault();
-            return;
-          }
-          for (key in importgenomes) {
-            if (Object.keys(importgenomes[key]).length == 0) {
-              alert("Missing trackDb.txt for '" + key + "'");
-              event.preventDefault();
-              return;
-            }
-          }
-          switchPanel("#panel-import", "#panel-genomes");
-
-          $("#genome-table tbody").html("");
-          hubinfo = importhubinfo;
-          genomes = importgenomes;
-          for (genome in genomes) {
-            addGenomeToTable(undefined, genomes[genome]);
-          }
-
-          importhubinfo = {};
-          importgenomes = {};
-
-          save();
-        });
-
-        $("#btn-import-cancel").click(function() {
-          if (Object.keys(hubinfo).length == 0) {
-            switchPanel("#panel-import", "#panel-basic-info");
-          } else {
-            switchPanel("#panel-import", "#panel-basic-info");
-          }
-
-          importhubinfo = {};
-          importgenomes = {};
-        });
 
         // Tracks panel
         $("#btn-create-track").click(function() {

@@ -66,3 +66,70 @@ function getTrackDBExportData(genome) {
     }
     return out;
 }
+
+function getHubImportData(data) {
+    let importhubinfo = {};
+    let lines = data.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+        let str = lines[i];
+        let key = clean(str.substr(0, str.indexOf(' ')));
+        let value = clean(str.substr(str.indexOf(' ') +1));
+        importhubinfo[key] = value;
+    }
+    return importhubinfo;
+}
+
+function clean(str) {
+    str = str.replace(/(\r\n|\n|\r)/gm,"");
+    return str;
+}
+
+function getGenomesImportData(data) {
+    let importgenomes = {};
+    let lines = data.split('\n');
+    let current = {};
+    for (var i = 0; i < lines.length; i++) {
+        let str = lines[i];
+        let key = clean(str.substr(0, str.indexOf(' ')));
+        let value = clean(str.substr(str.indexOf(' ') +1));
+        if (key == "genome") {
+            importgenomes[value] = {};
+        }
+    }
+
+    $("#input-import-genomeslist").show();
+    for (genome in importgenomes) {
+        let markup = `
+        <label for="input_import_genome-${genome}">${genome}</label>
+        <input class="form-control-file genome-upload" data-genome="${genome}" type="file" name="genome-${genome}" id="input_import_genome_${genome}">
+        <br>
+        `;
+        $("#input-import-genomeslist").append(markup);
+    }
+    return importgenomes;
+}
+
+function getTrackDBImportData(data, genomeName, importgenomes) {
+    let genomeObj = new Genome();
+    genomeObj.name = genomeName;
+    let lines = data.split('\n');
+    let current = new Track();
+    let currentTrack = "";
+    for (var i = 0; i < lines.length; i++) {
+        let str = lines[i];
+        let key = clean(str.substr(0, str.indexOf(' ')));
+        let value = clean(str.substr(str.indexOf(' ') +1));
+        if (key == "track") {
+            currentTrack = value;
+        }
+        current[key] = value;
+        if (i+1 == lines.length || !lines[i+1].trim()) {
+            i++;
+            genomeObj.tracks[currentTrack] = current;
+            current = new Track();
+            currentTrack = "";
+        }
+    }
+    importgenomes[genomeObj.name] = genomeObj;
+    return importgenomes;
+}
