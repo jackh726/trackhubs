@@ -44,7 +44,7 @@ function getGenomesExportData(genomes) {
             out += "\n";
         }
         out += "genome " + key + "\n";
-        out += "trackDb " + key + "\\trackDb.txt\n";
+        out += "trackDb " + key + "/trackDb.txt\n";
     }
     return out;
 }
